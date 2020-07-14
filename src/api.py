@@ -1,4 +1,9 @@
 from flask import Flask
+try:
+    from smbus2 import SMBus
+except ImportError:
+    from smbus import SMBus
+from bme280 import BME280
 
 app = Flask(__name__)
 
