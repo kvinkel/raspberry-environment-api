@@ -6,6 +6,8 @@ except ImportError:
 from bme280 import BME280
 
 app = Flask(__name__)
+smbus = SMBus(1)
+bme280 = BME280(i2c_dev=smbus)
 
 
 @app.route('/')
@@ -15,17 +17,17 @@ def hello_world():
 
 @app.route('/temperature', methods=['GET'])
 def get_temperature():
-    return 0
+    return bme280.get_temperature()
 
 
 @app.route('/humidity', method=['GET'])
 def get_humidity():
-    return 0
+    return bme280.get_humidity()
 
 
 @app.route('/pressure', method=['GET'])
 def get_pressure():
-    return 0
+    return bme280.get_pressure()
 
 
 @app.route('/tvoc', method=['GET'])
