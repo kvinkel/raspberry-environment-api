@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 try:
     from smbus2 import SMBus
 except ImportError:
@@ -15,35 +15,48 @@ def hello_world():
     return 'Hello World!'
 
 
+@app.route('/sensors', methods=['GET'])
+def get_sensor_values():
+    temperature = round(bme280.get_temperature(), 2)
+    humidity = round(bme280.get_humidity(), 2)
+    pressure = round(bme280.get_pressure(), 2)
+    json = {
+        "temperature": temperature,
+        "humidity": humidity,
+        "pressure": pressure
+    }
+    return jsonify(json)
+
+
 @app.route('/temperature', methods=['GET'])
 def get_temperature():
-    return bme280.get_temperature()
+    return str(bme280.get_temperature())
 
 
-@app.route('/humidity', method=['GET'])
+@app.route('/humidity', methods=['GET'])
 def get_humidity():
-    return bme280.get_humidity()
+    return str(bme280.get_humidity())
 
 
-@app.route('/pressure', method=['GET'])
+@app.route('/pressure', methods=['GET'])
 def get_pressure():
-    return bme280.get_pressure()
+    return str(bme280.get_pressure())
 
 
-@app.route('/tvoc', method=['GET'])
+@app.route('/tvoc', methods=['GET'])
 def get_tvoc():
-    return 0
+    return '0'
 
 
-@app.route('/eco2', method=['GET'])
+@app.route('/eco2', methods=['GET'])
 def get_eco2():
-    return 0
+    return '0'
 
 
-@app.route('cpu-temp', method=['GET'])
+@app.route('/cpu-temp', methods=['GET'])
 def get_cpu_temp():
-    return 0
+    return '0'
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(host='0.0.0.0', port=80)
