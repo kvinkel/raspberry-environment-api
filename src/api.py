@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, jsonify
 try:
     from smbus2 import SMBus
 except ImportError:
@@ -13,6 +13,19 @@ bme280 = BME280(i2c_dev=smbus)
 @app.route('/')
 def hello_world():
     return 'Hello World!'
+
+
+@app.route('/sensors')
+def get_sensor_values():
+    temperature = round(bme280.get_temperature(), 2)
+    humidity = round(bme280.get_humidity, 2)
+    pressure = round(bme280.get_pressure, 2)
+    json = {
+        "temperature": temperature,
+        "humidity": humidity,
+        "pressure": pressure
+    }
+    return jsonify(json)
 
 
 @app.route('/temperature', methods=['GET'])
