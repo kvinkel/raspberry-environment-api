@@ -1,4 +1,5 @@
 import time
+from threading import Thread
 from flask import Flask, jsonify
 try:
     from smbus2 import SMBus
@@ -11,13 +12,13 @@ app = Flask(__name__)
 smbus = SMBus(1)
 bme280 = BME280(i2c_dev=smbus)
 sgp30 = SGP30()
-
+ready = False
 
 def start_sgp30():
     sgp30.start_measurement()
+    global ready
+    ready = True
     while True:
-        sgp30.get_air_quality()
-        global eco2, tvoc
         eco2, tvoc = sgp30.command('measure_air_quality')
         time.sleep(1)
 
@@ -29,9 +30,12 @@ def hello_world():
 
 @app.route('/sensors', methods=['GET'])
 def get_sensor_values():
+    if not ready:
+        return jsonify({"message": "sensors warming up"})
     temperature = round(bme280.get_temperature(), 2)
     humidity = round(bme280.get_humidity(), 2)
     pressure = round(bme280.get_pressure(), 2)
+    eco2, tvoc = sgp30.command('measure_air_quality')
     json = {
         "temperature": temperature,
         "humidity": humidity,
@@ -73,4 +77,7 @@ def get_cpu_temp():
 
 
 if __name__ == '__main__':
+    t1 = Thread(target = start_sgp30)
+    t1.setDaemon(True)
+    t1.start()
     app.run(host='0.0.0.0', port=80)
