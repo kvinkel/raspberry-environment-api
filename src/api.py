@@ -1,13 +1,25 @@
+import time
 from flask import Flask, jsonify
 try:
     from smbus2 import SMBus
 except ImportError:
     from smbus import SMBus
 from bme280 import BME280
+from sgp30 import SGP30
 
 app = Flask(__name__)
 smbus = SMBus(1)
 bme280 = BME280(i2c_dev=smbus)
+sgp30 = SGP30()
+
+
+def start_sgp30():
+    sgp30.start_measurement()
+    while True:
+        sgp30.get_air_quality()
+        global eco2, tvoc
+        eco2, tvoc = sgp30.command('measure_air_quality')
+        time.sleep(1)
 
 
 @app.route('/')
@@ -23,7 +35,9 @@ def get_sensor_values():
     json = {
         "temperature": temperature,
         "humidity": humidity,
-        "pressure": pressure
+        "pressure": pressure,
+        "eco2": eco2,
+        "tvoc": tvoc
     }
     return jsonify(json)
 
@@ -45,12 +59,12 @@ def get_pressure():
 
 @app.route('/tvoc', methods=['GET'])
 def get_tvoc():
-    return '0'
+    return str(tvoc)
 
 
 @app.route('/eco2', methods=['GET'])
 def get_eco2():
-    return '0'
+    return str(eco2)
 
 
 @app.route('/cpu-temp', methods=['GET'])
