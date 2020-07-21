@@ -1,6 +1,7 @@
 import time
-from threading import Thread
+import threading
 from flask import Flask, jsonify
+
 try:
     from smbus2 import SMBus
 except ImportError:
@@ -11,15 +12,17 @@ from sgp30 import SGP30
 app = Flask(__name__)
 smbus = SMBus(1)
 bme280 = BME280(i2c_dev=smbus)
-sgp30 = SGP30()
-ready = False
+lock = threading.Lock()
+eco2, tvoc = 0, 0
 
-def start_sgp30():
+
+def start_sgp30(lock):
+    sgp30 = SGP30()
     sgp30.start_measurement()
-    global ready
-    ready = True
+    global eco2, tvoc
     while True:
-        eco2, tvoc = sgp30.command('measure_air_quality')
+        with lock:
+            eco2, tvoc = sgp30.command('measure_air_quality')
         time.sleep(1)
 
 
@@ -30,19 +33,18 @@ def hello_world():
 
 @app.route('/sensors', methods=['GET'])
 def get_sensor_values():
-    if not ready:
-        return jsonify({"message": "sensors warming up"})
     temperature = round(bme280.get_temperature(), 2)
     humidity = round(bme280.get_humidity(), 2)
     pressure = round(bme280.get_pressure(), 2)
-    eco2, tvoc = sgp30.command('measure_air_quality')
-    json = {
-        "temperature": temperature,
-        "humidity": humidity,
-        "pressure": pressure,
-        "eco2": eco2,
-        "tvoc": tvoc
-    }
+    lock.acquire()
+    with lock:
+        json = {
+            "temperature": temperature,
+            "humidity": humidity,
+            "pressure": pressure,
+            "eco2": eco2,
+            "tvoc": tvoc
+        }
     return jsonify(json)
 
 
@@ -77,7 +79,7 @@ def get_cpu_temp():
 
 
 if __name__ == '__main__':
-    t1 = Thread(target = start_sgp30)
+    t1 = threading.Thread(target=start_sgp30, args=(lock,))
     t1.setDaemon(True)
     t1.start()
     app.run(host='0.0.0.0', port=80)
