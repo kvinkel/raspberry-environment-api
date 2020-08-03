@@ -27,6 +27,13 @@ def start_sgp30(lock):
         time.sleep(1)
 
 
+def get_cpu_temp():
+    file = open('/sys/class/thermal/thermal_zone0/temp')
+    cpu_temp = file.readline().strip()
+    file.close()
+    return float(cpu_temp)/1000
+
+
 @app.route('/')
 def hello_world():
     return 'Hello World!'
@@ -37,13 +44,15 @@ def get_sensor_values():
     temperature = round(bme280.get_temperature(), 2)
     humidity = round(bme280.get_humidity(), 2)
     pressure = round(bme280.get_pressure(), 2)
+    cpu_temp = round(get_cpu_temp(), 2)
     with lock:
         json = {
             "temperature": temperature,
             "humidity": humidity,
             "pressure": pressure,
             "eco2": eco2,
-            "tvoc": tvoc
+            "tvoc": tvoc,
+            "cpu_temp": cpu_temp
         }
     return jsonify(json)
 
@@ -75,7 +84,7 @@ def get_eco2():
 
 @app.route('/cpu-temp', methods=['GET'])
 def get_cpu_temp():
-    return '0'
+    return str(get_cpu_temp())
 
 
 if __name__ == '__main__':
