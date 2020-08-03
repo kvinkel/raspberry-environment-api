@@ -83,7 +83,7 @@ def get_eco2():
 
 
 @app.route('/cpu-temp', methods=['GET'])
-def get_cpu_temp():
+def get_cpu():
     return str(get_cpu_temp())
 
 
