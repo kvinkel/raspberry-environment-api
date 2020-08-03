@@ -16,6 +16,7 @@ lock = threading.Lock()
 eco2, tvoc = 0, 0
 
 
+# measure_air_quality command sent regularly for better baseline compensation
 def start_sgp30(lock):
     sgp30 = SGP30()
     sgp30.start_measurement()
@@ -36,7 +37,6 @@ def get_sensor_values():
     temperature = round(bme280.get_temperature(), 2)
     humidity = round(bme280.get_humidity(), 2)
     pressure = round(bme280.get_pressure(), 2)
-    lock.acquire()
     with lock:
         json = {
             "temperature": temperature,
