@@ -42,3 +42,4 @@ while True:
             cpu_temp = file.readline().strip()
             file.close()
             print(float(cpu_temp) / 1000)
+            time.sleep(1)
