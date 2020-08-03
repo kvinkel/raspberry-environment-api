@@ -17,7 +17,7 @@ def warmup_bar():
 
 
 while True:
-    user_input = input('Commands: bme280, sgp30, exit \n> ')
+    user_input = input('Commands: bme280, sgp30, cpu, exit \n> ')
     if user_input == 'exit':
         quit()
 
@@ -35,3 +35,10 @@ while True:
         for i in range(10):
             print(sgp30.get_air_quality())
             time.sleep(1)
+
+    if user_input == 'cpu':
+        for i in range(10):
+            file = open('/sys/class/thermal/thermal_zone0/temp')
+            cpu_temp = file.readline().strip()
+            file.close()
+            print(float(cpu_temp) / 1000)
