@@ -8,7 +8,7 @@ except ImportError:
     from smbus import SMBus
 from bme280 import BME280
 from sgp30 import SGP30
-import database
+from src import database
 
 app = Flask(__name__)
 smbus = SMBus(1)
@@ -84,6 +84,16 @@ def get_sensor_values():
 @app.route('/average', methods=['GET'])
 def get_average():
     return jsonify(database.get_avg_data())
+
+
+@app.route('/min_max', methods=['GET'])
+def get_min_max():
+    return jsonify(database.get_min_max())
+
+
+@app.route('/measurement_info', methods=['GET'])
+def get_measurement_info():
+    return jsonify(database.get_measurement_info())
 
 
 @app.route('/temperature', methods=['GET'])
