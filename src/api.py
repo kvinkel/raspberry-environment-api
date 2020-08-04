@@ -28,6 +28,13 @@ def start_sgp30(lock):
         time.sleep(1)
 
 
+# First reading from bme will have lower readings if not used in a while
+def discard_bme_reading():
+    bme280.get_temperature()
+    bme280.get_humidity()
+    bme280.get_pressure()
+
+
 def get_cpu_temp():
     file = open('/sys/class/thermal/thermal_zone0/temp')
     cpu_temp = file.readline().strip()
@@ -36,6 +43,8 @@ def get_cpu_temp():
 
 
 def start_data_save():
+    time.sleep(60)  # Wait for sgp30 to warm up
+    discard_bme_reading()
     while True:
         temp = round(bme280.get_temperature(), 2)
         hum = round(bme280.get_humidity(), 2)
@@ -55,6 +64,7 @@ def hello_world():
 
 @app.route('/sensors', methods=['GET'])
 def get_sensor_values():
+    discard_bme_reading()
     temperature = round(bme280.get_temperature(), 2)
     humidity = round(bme280.get_humidity(), 2)
     pressure = round(bme280.get_pressure(), 2)
