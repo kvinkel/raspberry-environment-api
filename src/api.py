@@ -8,7 +8,7 @@ except ImportError:
     from smbus import SMBus
 from bme280 import BME280
 from sgp30 import SGP30
-from src import database
+import database
 
 app = Flask(__name__)
 smbus = SMBus(1)
@@ -43,7 +43,7 @@ def get_cpu_temp():
 
 
 def start_data_save():
-    time.sleep(60)  # Wait for sgp30 to warm up
+    time.sleep(30)  # Wait for sgp30 to warm up
     discard_bme_reading()
     while True:
         temp = round(bme280.get_temperature(), 2)
