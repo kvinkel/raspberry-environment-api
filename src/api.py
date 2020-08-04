@@ -1,5 +1,6 @@
 import time
 import threading
+import schedule
 from flask import Flask, jsonify
 
 try:
@@ -8,6 +9,7 @@ except ImportError:
     from smbus import SMBus
 from bme280 import BME280
 from sgp30 import SGP30
+from src import database
 
 app = Flask(__name__)
 smbus = SMBus(1)
@@ -31,7 +33,20 @@ def get_cpu_temp():
     file = open('/sys/class/thermal/thermal_zone0/temp')
     cpu_temp = file.readline().strip()
     file.close()
-    return float(cpu_temp)/1000
+    return float(cpu_temp) / 1000
+
+
+def start_data_save():
+    while True:
+        temp = round(bme280.get_temperature(), 2)
+        hum = round(bme280.get_humidity(), 2)
+        pres = round(bme280.get_pressure(), 2)
+        cpu_temp = round(get_cpu_temp(), 2)
+        with lock:
+            t = tvoc
+            e = eco2
+        database.add_sensor_data(temp, hum, pres, t, e, cpu_temp)
+        time.sleep(3600)
 
 
 @app.route('/')
@@ -91,4 +106,7 @@ if __name__ == '__main__':
     t1 = threading.Thread(target=start_sgp30, args=(lock,))
     t1.setDaemon(True)
     t1.start()
+    t2 = threading.Thread(target=start_data_save)
+    t2.setDaemon(True)
+    t2.start()
     app.run(host='0.0.0.0', port=80)
