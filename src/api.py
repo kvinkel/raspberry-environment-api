@@ -72,6 +72,11 @@ def get_sensor_values():
     return jsonify(json)
 
 
+@app.route('/average', methods=['GET'])
+def get_average():
+    return jsonify(database.get_avg_data())
+
+
 @app.route('/temperature', methods=['GET'])
 def get_temperature():
     return str(bme280.get_temperature())
