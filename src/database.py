@@ -42,8 +42,8 @@ def get_avg_data():
             "temperature": round(row[0], 2),
             "humidity": round(row[1], 2),
             "pressure": round(row[2], 2),
-            "tvoc": round(row[3], 2),
-            "eco2": round(row[4], 2),
+            "tvoc": row[3],
+            "eco2": row[4],
             "cpu_temp": round(row[5], 2)
         }
     return average
