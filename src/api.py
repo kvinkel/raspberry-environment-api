@@ -1,6 +1,5 @@
 import time
 import threading
-import schedule
 from flask import Flask, jsonify
 
 try:
@@ -9,7 +8,7 @@ except ImportError:
     from smbus import SMBus
 from bme280 import BME280
 from sgp30 import SGP30
-from src import database
+import database
 
 app = Flask(__name__)
 smbus = SMBus(1)
@@ -108,6 +107,7 @@ def get_cpu():
 
 
 if __name__ == '__main__':
+    database.set_up()
     t1 = threading.Thread(target=start_sgp30, args=(lock,))
     t1.setDaemon(True)
     t1.start()
