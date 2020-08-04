@@ -26,3 +26,8 @@ def set_up():
           'tvoc INTEGER,'
           'eco2 INTEGER,'
           'cpu_temp REAL);')
+
+
+def add_sensor_data(temp, hum, pres, tvoc, eco2, cpu_temp):
+    query('INSERT INTO sensor(temperature, humidity, pressure, tvoc, eco2, cpu_temp) VALUES (?, ?, ?, ?, ?, ?);',
+          (temp, hum, pres, tvoc, eco2, cpu_temp))
