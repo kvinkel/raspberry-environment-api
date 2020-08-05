@@ -13,7 +13,7 @@ sgp30 = SGP30()
 
 
 def warmup_bar():
-    print('#', end='', flush=True)
+    print('.', end='', flush=True)
 
 
 while True:
@@ -22,7 +22,12 @@ while True:
         quit()
 
     if user_input == 'bme280':
-        for i in range(5):
+        # Discard first reading
+        bme280.get_temperature()
+        bme280.get_pressure()
+        bme280.get_humidity()
+        time.sleep(0.08)
+        for i in range(10):
             temperature = bme280.get_temperature()
             pressure = bme280.get_pressure()
             humidity = bme280.get_humidity()
@@ -30,8 +35,9 @@ while True:
             time.sleep(1)
 
     if user_input == 'sgp30':
-        print('Sensor warming up')
+        print('Sensor warming up', end='')
         sgp30.start_measurement(warmup_bar)
+        print('\n')
         for i in range(10):
             print(sgp30.get_air_quality())
             time.sleep(1)
