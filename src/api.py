@@ -45,6 +45,7 @@ def get_cpu_temp():
 def start_data_save():
     time.sleep(30)  # Wait for sgp30 to warm up
     discard_bme_reading()
+    sgp = SGP30()
     while True:
         temp = round(bme280.get_temperature(), 2)
         hum = round(bme280.get_humidity(), 2)
@@ -55,6 +56,8 @@ def start_data_save():
             e = eco2
         database.add_sensor_data(temp, hum, pres, t, e, cpu_temp)
         time.sleep(3600)
+        eco2_base, tvoc_base = sgp.command('get_baseline')
+        database.set_baseline(eco2_base, tvoc_base)
 
 
 @app.route('/')
@@ -126,8 +129,16 @@ def get_cpu():
     return str(get_cpu_temp())
 
 
+def set_sgp30_baseline():
+    sg = SGP30()
+    eco2_base, tvoc_base = database.get_baseline()
+    if eco2_base != 0:
+        sg.command('set_baseline', eco2_base, tvoc_base)
+
+
 if __name__ == '__main__':
     database.set_up()
+    set_sgp30_baseline()
     t1 = threading.Thread(target=start_sgp30, args=(lock,))
     t1.setDaemon(True)
     t1.start()
