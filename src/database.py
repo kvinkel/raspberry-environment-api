@@ -26,6 +26,9 @@ def set_up():
           'tvoc INTEGER,'
           'eco2 INTEGER,'
           'cpu_temp REAL);')
+    query('CREATE TABLE IF NOT EXISTS sgp30_baseline(timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,'
+          ' eco2 INTEGER, tvoc Integer);')
+    query('INSERT INTO sgp30_baseline(eco2, tvoc) VALUES (0, 0);')
 
 
 def add_sensor_data(temp, hum, pres, tvoc, eco2, cpu_temp):
@@ -81,3 +84,11 @@ def get_measurement_info():
             "total_measurements": row[1]
         }
     return info
+
+
+def set_baseline(eco2, tvoc):
+    query('UPDATE sgp30_baseline SET timestamp = CURRENT_TIMESTAMP, eco2 = ' + str(eco2) + ', tvoc = ' + str(tvoc) + ';')
+
+
+def get_baseline():
+    return query('SELECT eco2, tvoc FROM sgp30_baseline;')[0]
