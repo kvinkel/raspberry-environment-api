@@ -33,6 +33,7 @@ def discard_bme_reading():
     bme280.get_temperature()
     bme280.get_humidity()
     bme280.get_pressure()
+    time.sleep(0.08)
 
 
 def get_cpu_temp():
@@ -44,9 +45,9 @@ def get_cpu_temp():
 
 def start_data_save():
     time.sleep(30)  # Wait for sgp30 to warm up
-    discard_bme_reading()
     sgp = SGP30()
     while True:
+        discard_bme_reading()
         temp = bme280.get_temperature()
         hum = bme280.get_humidity()
         pres = bme280.get_pressure()
