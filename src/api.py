@@ -47,10 +47,10 @@ def start_data_save():
     discard_bme_reading()
     sgp = SGP30()
     while True:
-        temp = round(bme280.get_temperature(), 2)
-        hum = round(bme280.get_humidity(), 2)
-        pres = round(bme280.get_pressure(), 2)
-        cpu_temp = round(get_cpu_temp(), 2)
+        temp = bme280.get_temperature()
+        hum = bme280.get_humidity()
+        pres = bme280.get_pressure()
+        cpu_temp = get_cpu_temp()
         with lock:
             t = tvoc
             e = eco2
@@ -68,10 +68,10 @@ def hello_world():
 @app.route('/sensors', methods=['GET'])
 def get_sensor_values():
     discard_bme_reading()
-    temperature = round(bme280.get_temperature(), 2)
-    humidity = round(bme280.get_humidity(), 2)
-    pressure = round(bme280.get_pressure(), 2)
-    cpu_temp = round(get_cpu_temp(), 2)
+    temperature = bme280.get_temperature()
+    humidity = bme280.get_humidity()
+    pressure = bme280.get_pressure()
+    cpu_temp = get_cpu_temp()
     with lock:
         json = {
             "temperature": temperature,
