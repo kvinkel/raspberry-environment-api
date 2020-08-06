@@ -37,52 +37,44 @@ def add_sensor_data(temp, hum, pres, tvoc, eco2, cpu_temp):
 
 
 def get_avg_data():
-    result = query(
-        'SELECT AVG(temperature), AVG(humidity), AVG(pressure), AVG(tvoc), AVG(eco2), AVG(cpu_temp) FROM sensor;')
-    average = {}
-    for row in result:
-        average = {
-            "temperature": round(row[0], 2),
-            "humidity": round(row[1], 2),
-            "pressure": round(row[2], 2),
-            "tvoc": row[3],
-            "eco2": row[4],
-            "cpu_temp": round(row[5], 2)
-        }
+    result = query('SELECT AVG(temperature), AVG(humidity), AVG(pressure), AVG(tvoc), AVG(eco2), AVG(cpu_temp) FROM sensor;')
+    average = {
+        "temperature": result[0][0],
+        "humidity": result[0][1],
+        "pressure": result[0][2],
+        "tvoc": result[0][3],
+        "eco2": result[0][4],
+        "cpu_temp": result[0][5]
+    }
     return average
 
 
 def get_min_max():
-    result = query(
-        'SELECT MIN(temperature), MIN(humidity), MIN(pressure), MIN(tvoc), MIN(eco2), MIN(cpu_temp),'
-        ' MAX(temperature), MAX(humidity), MAX(pressure), MAX(tvoc), MAX(eco2), MAX(cpu_temp) FROM sensor;')
-    min_max = {}
-    for row in result:
-        min_max = {
-            "min_temp": row[0],
-            "min_hum": row[1],
-            "min_press": row[2],
-            "min_tvoc": row[3],
-            "min_eco2": row[4],
-            "min_cpu_temp": row[5],
-            "max_temp": row[6],
-            "max_hum": row[7],
-            "max_press": row[8],
-            "max_tvoc": row[9],
-            "max_eco2": row[10],
-            "max_cpu_temp": row[11]
-        }
+    result = query('SELECT MIN(temperature), MIN(humidity), MIN(pressure), MIN(tvoc), MIN(eco2), MIN(cpu_temp),'
+                   ' MAX(temperature), MAX(humidity), MAX(pressure), MAX(tvoc), MAX(eco2), MAX(cpu_temp) FROM sensor;')
+    min_max = {
+        "min_temp": result[0][0],
+        "min_hum": result[0][1],
+        "min_press": result[0][2],
+        "min_tvoc": result[0][3],
+        "min_eco2": result[0][4],
+        "min_cpu_temp": result[0][5],
+        "max_temp": result[0][6],
+        "max_hum": result[0][7],
+        "max_press": result[0][8],
+        "max_tvoc": result[0][9],
+        "max_eco2": result[0][10],
+        "max_cpu_temp": result[0][11]
+    }
     return min_max
 
 
 def get_measurement_info():
     result = query('SELECT MIN(timestamp), COUNT(*) FROM sensor;')
-    info = {}
-    for row in result:
-        info = {
-            "first_measurement": row[0],
-            "total_measurements": row[1]
-        }
+    info = {
+        "first_measurement": result[0][0],
+        "total_measurements": result[0][1]
+    }
     return info
 
 
