@@ -2,6 +2,7 @@ import time
 import threading
 from flask import Flask, jsonify
 import database
+import math
 
 try:
     from smbus2 import SMBus
@@ -15,6 +16,12 @@ smbus = SMBus(1)
 bme280 = BME280(i2c_dev=smbus)
 lock = threading.Lock()
 eco2, tvoc = 0, 0
+
+
+# Formula source: https://carnotcycle.wordpress.com/2012/08/04/how-to-convert-relative-humidity-to-absolute-humidity/
+# Accurate to within 0.1% over the temperature range –30°C to +35°C
+def calculate_absolute_humidity(temp, relative_hum):
+    return (6.112 * pow(math.e, (17.67 * temp) / (temp + 243.5)) * relative_hum * 2.1674) / (273.15 + temp)  # g/m³
 
 
 # measure_air_quality command sent regularly for better baseline compensation
