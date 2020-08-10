@@ -1,6 +1,7 @@
 import time
 import threading
 from flask import Flask, jsonify
+import database
 
 try:
     from smbus2 import SMBus
@@ -8,7 +9,6 @@ except ImportError:
     from smbus import SMBus
 from bme280 import BME280
 from sgp30 import SGP30
-import database
 
 app = Flask(__name__)
 smbus = SMBus(1)
@@ -28,13 +28,6 @@ def start_sgp30(lock):
         time.sleep(1)
 
 
-# First reading from bme will have lower readings if not used in a while
-def discard_bme_reading():
-    bme280.get_temperature()
-    bme280.get_humidity()
-    bme280.get_pressure()
-
-
 def get_cpu_temp():
     file = open('/sys/class/thermal/thermal_zone0/temp')
     cpu_temp = file.readline().strip()
@@ -43,18 +36,20 @@ def get_cpu_temp():
 
 
 def start_data_save():
-    time.sleep(30)  # Wait for sgp30 to warm up
-    discard_bme_reading()
+    time.sleep(60)  # Wait for sgp30 to warm up
+    sgp = SGP30()
     while True:
-        temp = round(bme280.get_temperature(), 2)
-        hum = round(bme280.get_humidity(), 2)
-        pres = round(bme280.get_pressure(), 2)
-        cpu_temp = round(get_cpu_temp(), 2)
+        temp = bme280.get_temperature()
+        hum = bme280.get_humidity()
+        pres = bme280.get_pressure()
+        cpu_temp = get_cpu_temp()
         with lock:
             t = tvoc
             e = eco2
         database.add_sensor_data(temp, hum, pres, t, e, cpu_temp)
         time.sleep(3600)
+        eco2_base, tvoc_base = sgp.command('get_baseline')
+        database.set_baseline(eco2_base, tvoc_base)
 
 
 @app.route('/')
@@ -64,11 +59,10 @@ def hello_world():
 
 @app.route('/sensors', methods=['GET'])
 def get_sensor_values():
-    discard_bme_reading()
-    temperature = round(bme280.get_temperature(), 2)
-    humidity = round(bme280.get_humidity(), 2)
-    pressure = round(bme280.get_pressure(), 2)
-    cpu_temp = round(get_cpu_temp(), 2)
+    temperature = bme280.get_temperature()
+    humidity = bme280.get_humidity()
+    pressure = bme280.get_pressure()
+    cpu_temp = get_cpu_temp()
     with lock:
         json = {
             "temperature": temperature,
@@ -126,8 +120,20 @@ def get_cpu():
     return str(get_cpu_temp())
 
 
+def set_sgp30_baseline():
+    sg = SGP30()
+    eco2_base, tvoc_base = database.get_baseline()
+    if eco2_base != 0:
+        sg.command('set_baseline', (eco2_base, tvoc_base))
+
+
 if __name__ == '__main__':
+    # First reading from bme is inaccurate
+    bme280.get_temperature()
+    bme280.get_humidity()
+    bme280.get_pressure()
     database.set_up()
+    set_sgp30_baseline()
     t1 = threading.Thread(target=start_sgp30, args=(lock,))
     t1.setDaemon(True)
     t1.start()
