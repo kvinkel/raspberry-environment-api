@@ -4,7 +4,7 @@ import os
 
 def query(sql):
     try:
-        if os.path.isdir("sqlite"):
+        if os.path.isdir('sqlite_db'):
             connection = sqlite3.connect('/sqlite_db/sqlite.db')
         else:
             connection = sqlite3.connect('sqlite.db')
@@ -74,10 +74,11 @@ def get_min_max():
 
 
 def get_measurement_info():
-    result = query('SELECT MIN(timestamp), COUNT(*) FROM sensor;')
+    result = query('SELECT MIN(timestamp), MAX(timestamp), COUNT(*) FROM sensor;')
     info = {
         "first_measurement": result[0][0],
-        "total_measurements": result[0][1]
+        "latest_measurement": result[0][1],
+        "total_measurements": result[0][2]
     }
     return info
 
