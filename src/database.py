@@ -1,9 +1,13 @@
 import sqlite3
+import os
 
 
 def query(sql):
     try:
-        connection = sqlite3.connect('test.db')
+        if os.path.isdir("sqlite"):
+            connection = sqlite3.connect('/sqlite_db/sqlite.db')
+        else:
+            connection = sqlite3.connect('sqlite.db')
         cursor = connection.cursor()
         result = cursor.execute(sql).fetchall()
         connection.commit()
