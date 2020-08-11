@@ -49,9 +49,15 @@ def start_sgp30(lock):
     sgp30 = SGP30()
     sgp30.start_measurement()
     global eco2, tvoc
+    counter = 0
     while True:
         with lock:
             eco2, tvoc = sgp30.command('measure_air_quality')
+        counter += 1
+        if counter == 600:
+            counter = 0
+            absolute_hum = calculate_absolute_humidity(bme280.get_temperature, bme280.get_humidity)
+            sgp30.command('set_humidity', (convert_absolute_humidity(absolute_hum),))
         time.sleep(1)
 
 
