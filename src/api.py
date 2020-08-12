@@ -2,6 +2,7 @@ import time
 import threading
 from flask import Flask, jsonify
 import database
+import math
 
 try:
     from smbus2 import SMBus
@@ -17,22 +18,47 @@ lock = threading.Lock()
 eco2, tvoc = 0, 0
 
 
-# measure_air_quality command sent regularly for better baseline compensation
-def start_sgp30(lock):
-    sgp30 = SGP30()
-    sgp30.start_measurement()
-    global eco2, tvoc
-    while True:
-        with lock:
-            eco2, tvoc = sgp30.command('measure_air_quality')
-        time.sleep(1)
-
-
 def get_cpu_temp():
     file = open('/sys/class/thermal/thermal_zone0/temp')
     cpu_temp = file.readline().strip()
     file.close()
     return float(cpu_temp) / 1000
+
+
+# Formula source: https://carnotcycle.wordpress.com/2012/08/04/how-to-convert-relative-humidity-to-absolute-humidity/
+# Within 0.1% accuracy over temperature range –30°C to +35°C
+def calculate_absolute_humidity(temp, relative_hum):
+    return (6.112 * pow(math.e, (17.67 * temp) / (temp + 243.5)) * relative_hum * 2.1674) / (273.15 + temp)  # g/m³
+
+
+# Humidity compensation info: SGP30 datasheet page 8/15
+def convert_absolute_humidity(absolute_hum):
+    aft_dec, bef_dec = math.modf(absolute_hum)
+    bef = int(bef_dec)
+    aft = round(aft_dec * 256)
+    if bef > 255:
+        return 0
+    if aft > 255:
+        aft = 255
+    hum_hex = '0x{:02X}'.format(bef) + '{:02X}'.format(aft)
+    return int(hum_hex, 0)
+
+
+# measure_air_quality command sent regularly for better baseline compensation
+def start_sgp30(lock):
+    sgp30 = SGP30()
+    sgp30.start_measurement()
+    global eco2, tvoc
+    counter = 0
+    while True:
+        with lock:
+            eco2, tvoc = sgp30.command('measure_air_quality')
+        counter += 1
+        if counter == 600:
+            counter = 0
+            absolute_hum = calculate_absolute_humidity(bme280.get_temperature(), bme280.get_humidity())
+            sgp30.command('set_humidity', (convert_absolute_humidity(absolute_hum),))
+        time.sleep(1)
 
 
 def start_data_save():
