@@ -56,7 +56,7 @@ def start_sgp30(lock):
         counter += 1
         if counter == 600:
             counter = 0
-            absolute_hum = calculate_absolute_humidity(bme280.get_temperature, bme280.get_humidity)
+            absolute_hum = calculate_absolute_humidity(bme280.get_temperature(), bme280.get_humidity())
             sgp30.command('set_humidity', (convert_absolute_humidity(absolute_hum),))
         time.sleep(1)
 
