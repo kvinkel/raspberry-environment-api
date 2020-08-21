@@ -1,8 +1,8 @@
 import time
 import threading
-from flask import Flask, jsonify
 import database
 import math
+from fastapi import FastAPI
 
 try:
     from smbus2 import SMBus
@@ -11,7 +11,7 @@ except ImportError:
 from bme280 import BME280
 from sgp30 import SGP30
 
-app = Flask(__name__)
+app = FastAPI()
 smbus = SMBus(1)
 bme280 = BME280(i2c_dev=smbus)
 lock = threading.Lock()
@@ -78,19 +78,19 @@ def start_data_save():
         database.set_baseline(eco2_base, tvoc_base)
 
 
-@app.route('/')
+@app.get('/', response_class=PlainTextResponse)
 def hello_world():
     return 'Hello World!'
 
 
-@app.route('/sensors', methods=['GET'])
+@app.get('/sensors')
 def get_sensor_values():
     temperature = bme280.get_temperature()
     humidity = bme280.get_humidity()
     pressure = bme280.get_pressure()
     cpu_temp = get_cpu_temp()
     with lock:
-        json = {
+        sensor_values = {
             "temperature": temperature,
             "humidity": humidity,
             "pressure": pressure,
@@ -98,50 +98,50 @@ def get_sensor_values():
             "tvoc": tvoc,
             "cpu_temp": cpu_temp
         }
-    return jsonify(json)
+    return sensor_values
 
 
-@app.route('/average', methods=['GET'])
+@app.get('/average')
 def get_average():
-    return jsonify(database.get_avg_data())
+    return database.get_avg_data()
 
 
-@app.route('/min_max', methods=['GET'])
+@app.get('/min_max')
 def get_min_max():
-    return jsonify(database.get_min_max())
+    return database.get_min_max()
 
 
-@app.route('/measurement_info', methods=['GET'])
+@app.get('/measurement_info')
 def get_measurement_info():
-    return jsonify(database.get_measurement_info())
+    return database.get_measurement_info()
 
 
-@app.route('/temperature', methods=['GET'])
+@app.get('/temperature', response_class=PlainTextResponse)
 def get_temperature():
     return str(bme280.get_temperature())
 
 
-@app.route('/humidity', methods=['GET'])
+@app.get('/humidity', response_class=PlainTextResponse)
 def get_humidity():
     return str(bme280.get_humidity())
 
 
-@app.route('/pressure', methods=['GET'])
+@app.get('/pressure', response_class=PlainTextResponse)
 def get_pressure():
     return str(bme280.get_pressure())
 
 
-@app.route('/tvoc', methods=['GET'])
+@app.get('/tvoc', response_class=PlainTextResponse)
 def get_tvoc():
     return str(tvoc)
 
 
-@app.route('/eco2', methods=['GET'])
+@app.get('/eco2', response_class=PlainTextResponse)
 def get_eco2():
     return str(eco2)
 
 
-@app.route('/cpu-temp', methods=['GET'])
+@app.get('/cpu-temp', response_class=PlainTextResponse)
 def get_cpu():
     return str(get_cpu_temp())
 
@@ -153,17 +153,15 @@ def set_sgp30_baseline():
         sg.command('set_baseline', (eco2_base, tvoc_base))
 
 
-if __name__ == '__main__':
-    # First reading from bme is inaccurate
-    bme280.get_temperature()
-    bme280.get_humidity()
-    bme280.get_pressure()
-    database.set_up()
-    set_sgp30_baseline()
-    t1 = threading.Thread(target=start_sgp30, args=(lock,))
-    t1.setDaemon(True)
-    t1.start()
-    t2 = threading.Thread(target=start_data_save)
-    t2.setDaemon(True)
-    t2.start()
-    app.run(host='0.0.0.0', port=80)
+# First reading from bme is inaccurate
+bme280.get_temperature()
+bme280.get_humidity()
+bme280.get_pressure()
+database.set_up()
+set_sgp30_baseline()
+t1 = threading.Thread(target=start_sgp30, args=(lock,))
+t1.setDaemon(True)
+t1.start()
+t2 = threading.Thread(target=start_data_save)
+t2.setDaemon(True)
+t2.start()
