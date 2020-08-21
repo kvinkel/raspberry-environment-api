@@ -3,6 +3,7 @@ import threading
 import database
 import math
 from fastapi import FastAPI
+from fastapi.responses import PlainTextResponse
 
 try:
     from smbus2 import SMBus
