@@ -34,9 +34,9 @@ def calculate_absolute_humidity(temp, relative_hum):
 
 # Humidity compensation info: SGP30 datasheet page 8/15
 def convert_absolute_humidity(absolute_hum):
-    aft_dec, bef_dec = math.modf(absolute_hum)
-    bef = int(bef_dec)
-    aft = round(aft_dec * 256)
+    fractional, integer = math.modf(absolute_hum)
+    bef = int(integer)
+    aft = round(fractional * 256)
     if bef > 255:
         return 0
     if aft > 255:
@@ -103,7 +103,7 @@ def get_endpoint_descriptions():
         <p>The average of all readings saved in the database.</p>
         <li onclick="location.href = window.location.href + 'min-max'">/min-max</li>
         <p>The minimum and maximum values for all sensor readings saved in the database.</p>
-        <li onclick="location.href = window.location.href + 'measurement_info'">/measurement_info</li>
+        <li onclick="location.href = window.location.href + 'measurement-info'">/measurement-info</li>
         <p>The timestamp for the first and the latest sensor reading saved in the database along with the number of total readings saved.</p>
         <li onclick="location.href = window.location.href + 'temperature'">/temperature</li>
         <p>The temperature in degrees Celsius (°C).</p>
@@ -150,7 +150,7 @@ def get_min_max():
     return database.get_min_max()
 
 
-@app.get('/measurement_info')
+@app.get('/measurement-info')
 def get_measurement_info():
     return database.get_measurement_info()
 
@@ -192,7 +192,7 @@ def set_sgp30_baseline():
         sg.command('set_baseline', (eco2_base, tvoc_base))
 
 
-# First reading from bme is inaccurate
+# Discard first reading from bme280 because it's inaccurate
 bme280.get_temperature()
 bme280.get_humidity()
 bme280.get_pressure()
