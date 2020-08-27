@@ -32,7 +32,9 @@ def set_up():
           'cpu_temp REAL);')
     query('CREATE TABLE IF NOT EXISTS sgp30_baseline(timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,'
           ' eco2 INTEGER, tvoc Integer);')
-    query('INSERT INTO sgp30_baseline(eco2, tvoc) VALUES (0, 0);')
+    count = query('SELECT COUNT(*) FROM sgp30_baseline')
+    if count[0][0] == 0:
+        query('INSERT INTO sgp30_baseline(eco2, tvoc) VALUES (0, 0);')
 
 
 def add_sensor_data(temp, hum, pres, tvoc, eco2, cpu_temp):
