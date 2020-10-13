@@ -46,14 +46,13 @@ def convert_absolute_humidity(absolute_hum):
     return int(hum_hex, 0)
 
 
-# measure_air_quality command sent regularly for better baseline compensation
-def start_sgp30(lock):
+def start_sgp30():
     sgp30.start_measurement()
     global eco2, tvoc
     counter = 0
     while True:
         with lock:
-            eco2, tvoc = sgp30.command('measure_air_quality')
+            eco2, tvoc = sgp30.command('measure_air_quality')  # Command sent regularly for better baseline compensation
         counter += 1
         if counter == 600:
             counter = 0
@@ -214,7 +213,7 @@ bme280.get_humidity()
 bme280.get_pressure()
 database.set_up()
 set_sgp30_baseline()
-t2 = threading.Thread(target=start_sgp30, args=(lock,))
+t2 = threading.Thread(target=start_sgp30)
 t2.setDaemon(True)
 t2.start()
 t3 = threading.Thread(target=start_data_save)
