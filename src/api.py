@@ -15,6 +15,7 @@ from sgp30 import SGP30
 app = FastAPI()
 smbus = SMBus(1)
 bme280 = BME280(i2c_dev=smbus)
+sgp30 = SGP30()
 lock = threading.Lock()
 eco2, tvoc = 0, 0
 
@@ -47,7 +48,6 @@ def convert_absolute_humidity(absolute_hum):
 
 # measure_air_quality command sent regularly for better baseline compensation
 def start_sgp30(lock):
-    sgp30 = SGP30()
     sgp30.start_measurement()
     global eco2, tvoc
     counter = 0
@@ -64,7 +64,6 @@ def start_sgp30(lock):
 
 def start_data_save():
     time.sleep(60)  # Wait for sgp30 to warm up
-    sgp = SGP30()
     while True:
         temp = bme280.get_temperature()
         hum = bme280.get_humidity()
@@ -75,8 +74,6 @@ def start_data_save():
             e = eco2
         database.add_sensor_data(temp, hum, pres, t, e, cpu_temp)
         time.sleep(3600)
-        eco2_base, tvoc_base = sgp.command('get_baseline')
-        database.set_baseline(eco2_base, tvoc_base)
 
 
 @app.get('/', response_class=HTMLResponse)
@@ -186,11 +183,29 @@ def get_cpu():
     return str(get_cpu_temp())
 
 
+def save_baseline():
+    while True:
+        with lock:
+            eco2_base, tvoc_base = sgp30.command('get_baseline')
+        database.set_baseline(eco2_base, tvoc_base)
+        time.sleep(3600)
+
+
+def start_baseline_thread():
+    t1 = threading.Thread(target=save_baseline)
+    t1.setDaemon(True)
+    t1.start()
+
+
 def set_sgp30_baseline():
-    sg = SGP30()
     eco2_base, tvoc_base = database.get_baseline()
     if eco2_base != 0:
-        sg.command('set_baseline', (eco2_base, tvoc_base))
+        sgp30.command('set_baseline', (eco2_base, tvoc_base))
+        start_baseline_thread()
+    else:
+        t = threading.Timer(43200.0, start_baseline_thread)
+        t.setDaemon(True)
+        t.start()
 
 
 # Discard first reading from bme280 because it's inaccurate
@@ -199,9 +214,9 @@ bme280.get_humidity()
 bme280.get_pressure()
 database.set_up()
 set_sgp30_baseline()
-t1 = threading.Thread(target=start_sgp30, args=(lock,))
-t1.setDaemon(True)
-t1.start()
-t2 = threading.Thread(target=start_data_save)
+t2 = threading.Thread(target=start_sgp30, args=(lock,))
 t2.setDaemon(True)
 t2.start()
+t3 = threading.Thread(target=start_data_save)
+t3.setDaemon(True)
+t3.start()
