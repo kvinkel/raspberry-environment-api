@@ -100,7 +100,7 @@ def get_endpoint_descriptions():
             <li onclick="location.href = window.location.href + 'min-max'">/min-max</li>
             <p>The minimum and maximum values for all sensor readings saved in the database.</p>
             <li onclick="location.href = window.location.href + 'measurement-info'">/measurement-info</li>
-            <p>The timestamp for the first and the latest sensor reading saved in the database along with the number of total readings saved.</p>
+            <p>The timestamp (UTC) for the first and the latest sensor reading saved in the database along with the number of total readings saved.</p>
             <li onclick="location.href = window.location.href + 'temperature'">/temperature</li>
             <p>The temperature in degrees Celsius (°C).</p>
             <li onclick="location.href = window.location.href + 'humidity'">/humidity</li>
