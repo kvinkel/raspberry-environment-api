@@ -8,7 +8,7 @@ API for monitoring local environment temperature, humidity, pressure, TVOC, and 
 
 docker build -t r-api .
 
-docker run –p 80:80 --device /dev/i2c-1 --volume {PWD}/sqlite_db:sqlite_db r-api
+docker run –p 80:80 --device /dev/i2c-1 --volume {PWD}/sqlite_db:/sqlite_db r-api
 
 ## Links
 * BME280 library: https://github.com/pimoroni/bme280-python
